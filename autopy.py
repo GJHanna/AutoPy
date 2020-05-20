@@ -2,71 +2,99 @@ from json import dump, load
 from os import path, chdir, makedirs, getcwd
 from subprocess import Popen
 from sys import argv
-from github import Github
+from github import Github, GithubException
+from requests import exceptions
 
-credentials_path = './credentials.json'
-repo_name = str(argv[1])
+credentials_dir = getcwd()
+credentials_path = getcwd() + '/credentials.json'
 
-usr_name = ''
-usr_pwd = ''
-dir_def = ''
+class Main(object):
+    def __init__(self, repo_name):
+        self.repo_name = repo_name
+        self.main()    
 
-def main():
-    global usr_name
-    global usr_pwd
-    global dir_def
+    def main(self):
+        if (path.isfile(credentials_path)):
+            self.usr_name = self.get_credentials()['usr']
+            self.usr_pwd = self.get_credentials()['pwd']
+            self.dir_def = self.get_credentials()['dir_def']
+            self.create_dir()
+        else:
+            print('\nThis is first time setting.\n')
+            self.usr_name = input('Please enter your GitHub user name: ')
+            self.usr_pwd = input('Please enter your GitHub password: ')
+            self.dir_def = input('Please insert your default project directory: ')
+            print()
 
-    if (path.isfile(credentials_path)):
-        with open('credentials.json') as credentials_file:
-            credentials = load(credentials_file)
-            usr_name = credentials['usr']
-            usr_pwd = credentials['pwd']
-            dir_def = credentials['dir_def']
-        create_dir()
-    else:
-        print('\nThis is first time setting.\n')
-        usr_name = input('Please enter your GitHub user name: ')
-        usr_pwd = input('Please enter your GitHub password: ')
-        dir_def = input('Please insert your default project directory: ')
-        print()
+            credentials = {
+                'usr' : self.usr_name,
+                'pwd' : self.usr_pwd,
+                'dir_def' : self.dir_def
+            }
+            self.create_credentials(credentials)
+            self.create_dir()
 
-        credentials = {
-            'usr' : usr_name,
-            'pwd' : usr_pwd,
-            'dir_def' : dir_def
-        }
-
+    def create_credentials(self, credentials):
         with open('credentials.json', 'w') as credentials_file:
             dump(credentials, credentials_file)
-        create_dir()
 
-def create_dir():
-    chdir(path.expanduser('~/'))
-    dir = getcwd() + dir_def
-    chdir(dir)
-    repo_dir = dir + '/' + repo_name
-    if (not path.isdir(repo_dir)):
-        Popen('mkdir {}'.format(repo_dir), shell=True).wait()
-    Popen('cd {}'.format(repo_dir), shell=True).wait()
-    chdir(repo_dir)
-    initialize_git()
+    def get_credentials(self):
+        with open('credentials.json') as credentials_file:
+            return load(credentials_file)
 
-def initialize_git():
-    print(getcwd())
-    git = Github(usr_name, usr_pwd).get_user()
-    git.create_repo(repo_name)
-    git_cmds = [
-        'git init',
-        'git remote add origin git@github.com:{}/{}.git'.format(usr_name, repo_name),
-        'touch README.md',
-        'git add .',
-        'git commit -m "Initial commit"',
-        'git push -u origin master',
-        'code .'
-    ]
+    def create_dir(self):
+        chdir(path.expanduser('~/'))
+        dir = getcwd() + self.dir_def
+        chdir(dir)
+        self.repo_dir = dir + '/' + repo_name
+        if (not path.isdir(self.repo_dir)):
+            Popen('mkdir {}'.format(self.repo_dir), shell=True).wait()
+        Popen('cd {}'.format(self.repo_dir), shell=True).wait()
+        chdir(self.repo_dir)
+        self.initialize_git()
 
-    for git_cmd in git_cmds:
-        Popen(git_cmd, shell=True).wait()
+    def initialize_git(self):
+        git = Github(self.usr_name, self.usr_pwd).get_user()
+        
+        try:
+            git.create_repo(repo_name)
+        except GithubException as err:
+            print(err)
+            choice = input('\n\n\nIt seems that you have entered wrong username or password. Do you wants to change your username and password in credential.json file? (y/n)')
+            if (choice.strip() == 'y'):
+                chdir(credentials_dir)
+                print(getcwd())
+                # cmd = Popen('code {}'.format('credentials.json'))
+                # cmd.wait()
+                # self.usr_name = self.get_credentials()['usr']
+                # self.usr_pwd = self.get_credentials()['pwd']
+                # chdir(self.repo_dir)
+                # self.initialize_git()
+            else:
+                exit()
+        except exceptions.ConnectionError:
+            print("Failed to connect to GitHub. Please make sure you're conneccted to the internet.")
+        except exceptions.Timeout as err:
+            print(err)
+            self.initialize_git()
+        
+        git_cmds = [
+            'git init',
+            'git remote add origin git@github.com:{}/{}.git'.format(self.usr_name, self.repo_name),
+            'touch README.md',
+            'git add .',
+            'git commit -m "Initial commit"',
+            'git push -u origin master',
+            'code .'
+        ]
+
+        for git_cmd in git_cmds:
+            Popen(git_cmd, shell=True).wait()
 
 if __name__ == '__main__':
-    main()
+    try:
+        repo_name = str(argv[1])
+        Main(repo_name)
+    except IndexError:
+        print('Please provide directory name')
+        exit()
