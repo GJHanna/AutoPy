@@ -8,7 +8,7 @@ from requests import exceptions
 credentials_dir = getcwd()
 credentials_path = getcwd() + '/credentials.json'
 
-class Main(object):
+class AutoPy(object):
     def __init__(self, repo_name):
         self.repo_name = repo_name
         self.main()    
@@ -23,18 +23,17 @@ class Main(object):
             print('\nThis is first time setting.\n')
             self.usr_name = input('Please enter your GitHub user name: ')
             self.usr_pwd = input('Please enter your GitHub password: ')
-            self.dir_def = input('Please insert your default project directory: ')
-            print()
-
-            credentials = {
-                'usr' : self.usr_name,
-                'pwd' : self.usr_pwd,
-                'dir_def' : self.dir_def
-            }
-            self.create_credentials(credentials)
+            self.dir_def = input('Please insert your default project directory /Your/Path: ')
+            self.create_credentials()
             self.create_dir()
 
-    def create_credentials(self, credentials):
+    def create_credentials(self):
+        credentials = {
+            'usr' : self.usr_name,
+            'pwd' : self.usr_pwd,
+            'dir_def' : self.dir_def
+            }
+
         with open('credentials.json', 'w') as credentials_file:
             dump(credentials, credentials_file)
 
@@ -51,7 +50,26 @@ class Main(object):
             Popen('mkdir {}'.format(self.repo_dir), shell=True).wait()
         Popen('cd {}'.format(self.repo_dir), shell=True).wait()
         chdir(self.repo_dir)
-        self.initialize_git()
+        self.create_remote_repo()
+    
+    def check_credentials(self):
+        print('Your credentials are: \n')
+        for credentials in self.get_credentials():
+            print('\t {} : {}'.format(credentials, self.get_credentials()[credentials]))
+        cred = input('\nEnter 1 to change your username 2 to change your password ')
+        try: 
+            cred_num = int(cred)
+            if (cred_num == 1):
+                usr_nm = input('Enter your updated username ')
+                self.usr_name = usr_nm
+            elif (cred_num == 2):
+                usr_pwd = input('Enter your updated user password ')
+                self.usr_pwd = usr_pwd
+            else:
+                print('Unkown credential')
+            self.create_credentials()
+        except ValueError:
+            print('Invalid selection. Selection should be an integer')
 
     def create_remote_repo(self):
         git = Github(self.usr_name, self.usr_pwd).get_user()
@@ -60,17 +78,12 @@ class Main(object):
             git.create_repo(repo_name)
             self.initialize_git()
         except GithubException as err:
-            print(err)
-            choice = input('\n\n\nIt seems that you have entered wrong username or password. Do you wants to change your username and password in credential.json file? (y/n)')
+            choice = input('\nIt seems that you have entered wrong username or password. Do you wants to see and change your username and password credentials? (y/n) ')
             if (choice.strip() == 'y'):
                 chdir(credentials_dir)
-                print(getcwd())
-                # cmd = Popen('code {}'.format('credentials.json'))
-                # cmd.wait()
-                # self.usr_name = self.get_credentials()['usr']
-                # self.usr_pwd = self.get_credentials()['pwd']
-                # chdir(self.repo_dir)
-                # self.create_remote_repo()
+                self.check_credentials()
+                chdir(self.repo_dir)
+                self.create_remote_repo()
             else:
                 exit()
         except exceptions.ConnectionError:
@@ -82,20 +95,21 @@ class Main(object):
     def initialize_git(self):
         git_cmds = [
             'git init',
-            'git remote add origin git@github.com:{}/{}.git'.format(self.usr_name, self.repo_name),
+            'git remote add origin https://github.com/{}/{}.git'.format(self.usr_name, self.repo_name),
             'touch README.md',
             'git add .',
             'git commit -m "Initial commit"',
             'git push -u origin master',
             'code .'
         ]
+
         for git_cmd in git_cmds:
             Popen(git_cmd, shell=True).wait()
 
 if __name__ == '__main__':
     try:
         repo_name = str(argv[1])
-        Main(repo_name)
+        AutoPy(repo_name)
     except IndexError:
         print('Please provide directory name')
         exit()
