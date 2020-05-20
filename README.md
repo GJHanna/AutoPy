@@ -3,13 +3,13 @@ A simple script to automate the creation of a project directory with remote GitH
 
 # Getting Started
 You will need [PyGithub](https://github.com/PyGithub/PyGithub) installed. Run
-'''
+```
     $ pip install PyGithub
-'''
+```
 Once you've installed PyGithub you will be able to run the code through running
-'''
+```
     python autopy.py NAME-OF-YOUR-PROJECT-DIRECTORY
-'''
+```
 Upon running Autopy the first time you Will need to provide you're GitHub username and password along with the default directory that will be used as the default to create your future projects. 
 Make sure to insert '/' when providing the deafult director or else an exception will be raised.
 
