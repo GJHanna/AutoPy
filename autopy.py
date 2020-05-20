@@ -53,11 +53,12 @@ class Main(object):
         chdir(self.repo_dir)
         self.initialize_git()
 
-    def initialize_git(self):
+    def create_remote_repo(self):
         git = Github(self.usr_name, self.usr_pwd).get_user()
         
         try:
             git.create_repo(repo_name)
+            self.initialize_git()
         except GithubException as err:
             print(err)
             choice = input('\n\n\nIt seems that you have entered wrong username or password. Do you wants to change your username and password in credential.json file? (y/n)')
@@ -69,15 +70,16 @@ class Main(object):
                 # self.usr_name = self.get_credentials()['usr']
                 # self.usr_pwd = self.get_credentials()['pwd']
                 # chdir(self.repo_dir)
-                # self.initialize_git()
+                # self.create_remote_repo()
             else:
                 exit()
         except exceptions.ConnectionError:
             print("Failed to connect to GitHub. Please make sure you're conneccted to the internet.")
         except exceptions.Timeout as err:
             print(err)
-            self.initialize_git()
-        
+            self.create_remote_repo()
+
+    def initialize_git(self):
         git_cmds = [
             'git init',
             'git remote add origin git@github.com:{}/{}.git'.format(self.usr_name, self.repo_name),
@@ -87,7 +89,6 @@ class Main(object):
             'git push -u origin master',
             'code .'
         ]
-
         for git_cmd in git_cmds:
             Popen(git_cmd, shell=True).wait()
 
