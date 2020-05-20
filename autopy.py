@@ -51,25 +51,6 @@ class AutoPy(object):
         Popen('cd {}'.format(self.repo_dir), shell=True).wait()
         chdir(self.repo_dir)
         self.create_remote_repo()
-    
-    # def check_credentials(self):
-    #     print('Your credentials are: \n')
-    #     for credentials in self.get_credentials():
-    #         print('\t {} : {}'.format(credentials, self.get_credentials()[credentials]))
-    #     cred = input('\nEnter 1 to change your username 2 to change your password ')
-    #     try: 
-    #         cred_num = int(cred)
-    #         if (cred_num == 1):
-    #             usr_nm = input('Enter your updated username ')
-    #             self.usr_name = usr_nm
-    #         elif (cred_num == 2):
-    #             usr_pwd = input('Enter your updated user password ')
-    #             self.usr_pwd = usr_pwd
-    #         else:
-    #             print('Unkown credential')
-    #         self.create_credentials()
-    #     except ValueError:
-    #         print('Invalid selection. Selection should be an integer')
 
     def create_remote_repo(self):
         git = Github(self.usr_name, self.usr_pwd).get_user()
