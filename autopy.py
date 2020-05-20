@@ -52,24 +52,24 @@ class AutoPy(object):
         chdir(self.repo_dir)
         self.create_remote_repo()
     
-    def check_credentials(self):
-        print('Your credentials are: \n')
-        for credentials in self.get_credentials():
-            print('\t {} : {}'.format(credentials, self.get_credentials()[credentials]))
-        cred = input('\nEnter 1 to change your username 2 to change your password ')
-        try: 
-            cred_num = int(cred)
-            if (cred_num == 1):
-                usr_nm = input('Enter your updated username ')
-                self.usr_name = usr_nm
-            elif (cred_num == 2):
-                usr_pwd = input('Enter your updated user password ')
-                self.usr_pwd = usr_pwd
-            else:
-                print('Unkown credential')
-            self.create_credentials()
-        except ValueError:
-            print('Invalid selection. Selection should be an integer')
+    # def check_credentials(self):
+    #     print('Your credentials are: \n')
+    #     for credentials in self.get_credentials():
+    #         print('\t {} : {}'.format(credentials, self.get_credentials()[credentials]))
+    #     cred = input('\nEnter 1 to change your username 2 to change your password ')
+    #     try: 
+    #         cred_num = int(cred)
+    #         if (cred_num == 1):
+    #             usr_nm = input('Enter your updated username ')
+    #             self.usr_name = usr_nm
+    #         elif (cred_num == 2):
+    #             usr_pwd = input('Enter your updated user password ')
+    #             self.usr_pwd = usr_pwd
+    #         else:
+    #             print('Unkown credential')
+    #         self.create_credentials()
+    #     except ValueError:
+    #         print('Invalid selection. Selection should be an integer')
 
     def create_remote_repo(self):
         git = Github(self.usr_name, self.usr_pwd).get_user()
@@ -78,11 +78,13 @@ class AutoPy(object):
             git.create_repo(repo_name)
             self.initialize_git()
         except GithubException as err:
+            print(err)
             choice = input('\nIt seems that you have entered wrong username or password. Do you wants to see and change your username and password credentials? (y/n) ')
             if (choice.strip() == 'y'):
                 chdir(credentials_dir)
-                self.check_credentials()
-                chdir(self.repo_dir)
+                Popen('nano {}'.format('credentials.json'), shell=True).wait()
+                self.usr_name = self.get_credentials()['usr']
+                self.usr_pwd = self.get_credentials()['pwd']
                 self.create_remote_repo()
             else:
                 exit()
@@ -99,8 +101,7 @@ class AutoPy(object):
             'touch README.md',
             'git add .',
             'git commit -m "Initial commit"',
-            'git push -u origin master',
-            'code .'
+            'git push -u origin master'
         ]
 
         for git_cmd in git_cmds:
