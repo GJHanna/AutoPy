@@ -1,16 +1,29 @@
 from json import dump, load
+import argparse
 from os import path, chdir, makedirs, getcwd
 from subprocess import Popen
-from sys import argv
 from github import Github, GithubException
 from requests import exceptions
+
+parser = argparse.ArgumentParser(description='A simple script to automate the creation of a project directory with remote GitHub repository')
+parser.add_argument('-pv', '--private', action='store_true', help='make remote repository private')
+parser.add_argument('repo', nargs='?', help='New repo to create')
+parser.add_argument('-ch', '--change', action='store_true', help='edit credentials.json')
+parser.add_argument('-v', '--version', action='store_true', help='autopy.py version')
+
+version = 'AutoPy versions 2.0'
 
 credentials_dir = getcwd()
 credentials_path = getcwd() + '/credentials.json'
 
 class AutoPy(object):
-    def __init__(self, repo_name):
+    def __init__(self, repo_name, isPrivate):
+        self.isPrivate = isPrivate
         self.repo_name = repo_name
+        if (self.isPrivate):
+            print("Creating '{}' with a private remote repo".format(self.repo_name))
+        else:
+            print("Creating '{}' with a public remote repo".format(self.repo_name))
         self.main()    
 
     def main(self):
@@ -45,7 +58,7 @@ class AutoPy(object):
         chdir(path.expanduser('~/'))
         dir = getcwd() + self.dir_def
         chdir(dir)
-        self.repo_dir = dir + '/' + repo_name
+        self.repo_dir = dir + '/' + self.repo_name
         if (not path.isdir(self.repo_dir)):
             Popen('mkdir {}'.format(self.repo_dir), shell=True).wait()
         Popen('cd {}'.format(self.repo_dir), shell=True).wait()
@@ -56,7 +69,7 @@ class AutoPy(object):
         git = Github(self.usr_name, self.usr_pwd).get_user()
         
         try:
-            git.create_repo(repo_name)
+            git.create_repo(self.repo_name, private=self.isPrivate)
             self.initialize_git()
         except GithubException as err:
             print(err)
@@ -80,6 +93,7 @@ class AutoPy(object):
             'git init',
             'git remote add origin https://github.com/{}/{}.git'.format(self.usr_name, self.repo_name),
             'touch README.md',
+            'touch .gitignore',
             'git add .',
             'git commit -m "Initial commit"',
             'git push -u origin master'
@@ -89,9 +103,18 @@ class AutoPy(object):
             Popen(git_cmd, shell=True).wait()
 
 if __name__ == '__main__':
-    try:
-        repo_name = str(argv[1])
-        AutoPy(repo_name)
-    except IndexError:
-        print('Please provide directory name')
+    args = parser.parse_args()
+    if (args.version):
+        print(version)
         exit()
+    if (args.change):
+        chdir(credentials_dir)
+        Popen('nano {}'.format('credentials.json'), shell=True).wait()
+        exit()
+    try:
+        if (args.repo):
+            AutoPy(args.repo, args.private)
+        else:
+            raise TypeError
+    except TypeError:
+        print('Provide repo name')
