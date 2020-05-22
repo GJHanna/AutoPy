@@ -13,6 +13,18 @@ Once you've installed PyGithub you will be able to run the code through running
 Upon running Autopy for the first time you will need to provide you're GitHub username and password along with the default directory that will be used to create your future projects. 
 Make sure to insert '/' when providing the deafult director or else an exception will be raised.
 
+# Command line flags
+```
+    positional arguments:
+      repo            New repo to create
+
+    optional arguments:
+      -h, --help      show this help message and exit
+      -pv, --private  make remote repository private
+      -ch, --change   edit credentials.json
+      -v, --version   autopy.py version
+```
+
 # Support
 AutoPy currently runs only on MacOS
 
