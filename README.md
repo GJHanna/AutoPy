@@ -4,7 +4,7 @@ A simple script to automate the creation of a project directory with remote GitH
 # Getting Started
 You will need [PyGithub](https://github.com/PyGithub/PyGithub) installed. Run
 ```
-    $ pip install PyGithub
+    $ pip install -r requirements.txt
 ```
 Once you've installed PyGithub you will be able to run the code through running
 ```
